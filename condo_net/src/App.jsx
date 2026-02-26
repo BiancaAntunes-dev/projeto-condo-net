@@ -40,7 +40,7 @@ function PostCard({author, role, time, content, likes}){
 
 
 function App() {
-  const [posts] = useState([
+  const [posts, setPosts] = useState([
     {
       id: 1,
       author: 'Dona Maria (Ap 42)',
@@ -58,6 +58,24 @@ function App() {
       likes: 12
     }
   ])
+
+  const[newPost, setNewPost] = useState('') 
+
+  function handlePostSubmit(){
+    if (newPost.trim() === ''){
+      return
+    }
+    const new_post = {
+      id: Date.now(),
+      author: "Eu",
+      role: "Moradora",
+      time: new Date().getMinutes(),
+      content: newPost,
+      likes: 0
+    }
+
+    setPosts([new_Post, ...posts])
+  }
   return (<>
     <div className='app-container'>
       <aside className='sidebar'>
@@ -82,9 +100,11 @@ function App() {
             className='post-textarea'
             placeholder='O que deseja compartilhar com seus vizinhos?'
             rows={'3'}
+            value={newPost}
+            onChange={(e) => setNewPost(e.target.value)}
           />
           <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '10px', borderTop:'1px solid #f3f4f6'}}>
-            <button className='post-submit'>
+            <button className='post-submit' onClick={handlePostSubmit}>
               Enviar <Send size={16} />
             </button>
           </div>
