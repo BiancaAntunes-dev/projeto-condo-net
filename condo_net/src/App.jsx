@@ -1,10 +1,10 @@
-import { Icon, Heart, MessageSquare, Home, Megaphone, Calendar, User, Send } from 'lucide-react'
-import { useState } from 'react'
+import { Icon, Heart, MessageSquare, Home, Megaphone, Calendar, User, Send, Cloud } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
-function Sidebar({icon: Icon ,label}){
+function Sidebar({icon: Icon ,label, funcao_Click}){
   return (
-    <div className='nav-item'>
+    <div className='nav-item' onClick={funcao_Click}>
       <Icon size={20}/>
       <span>{label}</span>
     </div>
@@ -14,7 +14,7 @@ function PostCard({author, role, time, content, likes}){
   return (
     <div className='post-card'>
       <div className='post-header'>
-        <div className='avatar'>D</div>
+        <div className='avatar'>{author[0]}</div>
         <div>
           <div style={{ fontWeight: 'bold', fontSize: '14px'}}>{author}</div>
           <div style={{ fontSize: '12px', color:'#6b7280'}}>{role} . {time}</div>
@@ -38,9 +38,37 @@ function PostCard({author, role, time, content, likes}){
   )
 }
 
+function WeatherWiget() {
+  const [weather, setWeather] = useState(null);
+  useEffect(() => {
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=-23.55&longitude=-46.63&current_weather=true')
+    .then(res => res.json())
+    .then(data => setWeather(data.current_weather))
+    .catch(err => console.error("Erro ao carregar o clima", err))
+  }, [])
+
+  if(!weather) return <div className='post-card'>
+    Carregando previsão do tempo...
+  </div>
+
+  return (
+    <div className='post-card'>
+      <div style={{backgroundColor: '#f0f9ff', border: '1px solid  #bae6fd'}}>
+        <Cloud size={24}/>
+        <h3 style={{margin: 0}}> Tempo agora (São Paulo)</h3>
+      </div>
+      <div style={{fontSize: '2rem', fontWeight: 'bold', color: '#0c4a60'}}>
+        {weather.temperature}
+      </div>
+      <p style={{color: '#0284c7'}}>Vento {weather.windspeed} km/h</p>
+      <p style={{marginTop: '10px', fontWeight: 'bold', color: weather.temperature > 24 ? '#16a34a' : '#ea580c'}}></p>
+      {weather.temperature > 24 ? '🏄 Ótimo dia para usar a piscina.': '❄️ Talvez esteja frio demais para usar a piscina.'}
+    </div>
+  )
+}
 
 function App() {
-  const [posts, setPosts] = useState([
+  const [posts, setPosts ] = useState([
     {
       id: 1,
       author: 'Dona Maria (Ap 42)',
@@ -59,7 +87,9 @@ function App() {
     }
   ])
 
-  const[newPost, setNewPost] = useState('') 
+  const [newPost, setNewPost] = useState('')
+
+  const [activePage, setActivePage] = useState('home')
 
   function handlePostSubmit(){
     if (newPost.trim() === ''){
@@ -74,7 +104,8 @@ function App() {
       likes: 0
     }
 
-    setPosts([new_Post, ...posts])
+    setPosts([new_post, ...posts])
+    setNewPost('')
   }
   return (<>
     <div className='app-container'>
@@ -86,14 +117,15 @@ function App() {
           <div style={{ fontSize: '20px', fontWeight: 'bold'}}>CondoNet</div>
         </div>
         <nav>
-          <Sidebar icon={Home} label={'Ínicio'}/>
-          <Sidebar icon={Megaphone} label={'Comunicados'}/>
-          <Sidebar icon={Calendar} label={'Minhas Reservas'} />
-          <Sidebar icon={User} label={'Meu Perfil'} />
+          <Sidebar icon={Home} label={'Ínicio'} funcao_Click={() => setActivePage('home')}/>
+          <Sidebar icon={Megaphone} label={'Comunicados'} funcao_Click={() => setActivePage('comunicados')}/>
+          <Sidebar icon={Calendar} label={'Minhas Reservas'} funcao_Click={() => setActivePage('reservas')}/>
+          <Sidebar icon={User} label={'Meu Perfil'} funcao_Click={() => setActivePage('perfil')}/>
         </nav>
       </aside>
       <main className='feed-main'>
-        <h2 style={{ marginBottom: '20px', color: '#111827'}}>Mural do Condomínio</h2>
+        { activePage === 'home' && (<>
+          <h2 style={{ marginBottom: '20px', color: '#111827'}}>Mural do Condomínio</h2>
         
         <div className='new-post-box'>
           <textarea 
@@ -107,8 +139,9 @@ function App() {
             <button className='post-submit' onClick={handlePostSubmit}>
               Enviar <Send size={16} />
             </button>
-          </div>
-          {posts.map((item) => (
+          </div>          
+        </div>
+        {posts.map((item) => (
             <PostCard 
             key={item.id}
             author={item.author}
@@ -118,7 +151,19 @@ function App() {
             likes={item.likes}
             />
           ))}
-        </div>
+          </>
+        ) }
+    
+            {activePage === 'comunicados' && (
+            <>
+              <h2 style={{marginBottom: '20px', color: '#111827'}}>Comunicados & Utilidades</h2>
+              <WeatherWiget/>
+              <div className='post-card'>
+                <h3>📢 Aviso da Administração</h3>
+                <p>Lembramos que a manutenção dos elevadores ocorrerá na próxima terça-feira das 09hrs ás 12hrs.</p>
+              </div>
+            </>
+          )}
       </main>
     </div>
     </>
@@ -126,3 +171,4 @@ function App() {
 }
 
 export default App
+
